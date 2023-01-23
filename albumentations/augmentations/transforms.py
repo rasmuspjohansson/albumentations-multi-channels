@@ -778,7 +778,23 @@ class RandomShadow(ImageOnlyTransform):
         self.shadow_dimension = shadow_dimension
 
     def apply(self, image, vertices_list=(), **params):
-        return F.add_shadow(image, vertices_list)
+
+        if image.shape[-1]>3:
+            #When dealing with more channels than 3 we apply the same shadow to the 4th (Nir) channel as we do to RGB. Any other channels are asumed to not be affected by shadows (e.g lidar values) and are kept intakt.
+            #RGB treated like before
+            shadowed_rgb= F.add_shadow(image[:,:,0:3], vertices_list)
+            #Nir combined with G and B channel to mimic a normal RGB image
+            shadowed_GBnir = F.add_shadow(image[:,:,1:4], vertices_list)
+            #Nir is extracted after transformation
+            shadowed_nir = shadowed_GBnir[:,:,2]
+
+            #RGB and nir values are updated to the transformed versions
+            image[:,:,0:3] = shadowed_rgb
+            image[:,:,3]=shadowed_nir
+            return image
+
+        else:
+            return F.add_shadow(image, vertices_list)
 
     @property
     def targets_as_params(self):

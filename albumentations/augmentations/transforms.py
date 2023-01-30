@@ -1295,6 +1295,7 @@ class ISONoise(ImageOnlyTransform):
         return ("intensity", "color_shift")
 
 
+
 class CLAHE(ImageOnlyTransform):
     """Apply Contrast Limited Adaptive Histogram Equalization to the input image.
 

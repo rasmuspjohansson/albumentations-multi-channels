@@ -16,6 +16,7 @@ class ChannelDropout(ImageOnlyTransform):
     Args:
         channel_drop_range (int, int): range from which we choose the number of channels to drop.
         fill_value (int, float): pixel value for the dropped channel.
+        droppable_channels [int ,.. int]: indexes to the channels that might be dropped
         p (float): probability of applying the transform. Default: 0.5.
 
     Targets:
@@ -31,6 +32,7 @@ class ChannelDropout(ImageOnlyTransform):
         fill_value: Union[int, float] = 0,
         always_apply: bool = False,
         p: float = 0.5,
+        droppable_channels = [0,1,2,3]
     ):
         super(ChannelDropout, self).__init__(always_apply, p)
 
@@ -38,6 +40,8 @@ class ChannelDropout(ImageOnlyTransform):
 
         self.min_channels = channel_drop_range[0]
         self.max_channels = channel_drop_range[1]
+        self.droppable_channels =droppable_channels
+
 
         if not 1 <= self.min_channels <= self.max_channels:
             raise ValueError("Invalid channel_drop_range. Got: {}".format(channel_drop_range))
@@ -60,7 +64,14 @@ class ChannelDropout(ImageOnlyTransform):
 
         num_drop_channels = random.randint(self.min_channels, self.max_channels)
 
-        channels_to_drop = random.sample(range(num_channels), k=num_drop_channels)
+        if self.droppable_channels:
+            #if a list of droppable channels are provided
+            channels_to_drop = random.sample(self.droppable_channels, k=num_drop_channels)
+        else:
+            channels_to_drop = random.sample(range(num_channels), k=num_drop_channels)
+
+
+
 
         return {"channels_to_drop": channels_to_drop}
 

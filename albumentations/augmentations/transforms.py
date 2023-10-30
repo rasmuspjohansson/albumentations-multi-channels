@@ -778,6 +778,7 @@ class RandomShadow(ImageOnlyTransform):
         self.shadow_dimension = shadow_dimension
 
     def apply(self, image, vertices_list=(), **params):
+
         return F.add_shadow(image, vertices_list)
 
     @property

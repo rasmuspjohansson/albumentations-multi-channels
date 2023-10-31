@@ -729,7 +729,13 @@ def add_channel_value_augmentation(img,values_to_multiply,values_to_ad):
     :param values_to_ad:
     :return:
     """
+    print(values_to_multiply)
+    print(values_to_ad)
+    print("img before transform")
+    print(img)
     img = img*values_to_multiply + values_to_ad
+    print("img after transform")
+    print(img)
     img = np.clip(img,0,255.)
     return img
 

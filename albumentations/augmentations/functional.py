@@ -60,6 +60,7 @@ __all__ = [
     "to_gray",
     "gray_to_rgb",
     "unsharp_mask",
+    "add_channel_value_augmentation",
 ]
 
 
@@ -719,6 +720,19 @@ def add_sun_flare(img, flare_center_x, flare_center_y, src_radius, src_color, ci
         image_rgb = to_float(image_rgb, max_value=255)
 
     return image_rgb
+
+def add_channel_value_augmentation(img,values_to_multiply,values_to_ad):
+    """
+    Augment multichannel image by adding a random number to each channel and multiply each channel with a random number
+    :param img:
+    :param values_to_multiply:
+    :param values_to_ad:
+    :return:
+    """
+    img = img*values_to_multiply + values_to_ad
+    img = np.clip(img,0,255.)
+    return img
+
 
 
 @ensure_contiguous

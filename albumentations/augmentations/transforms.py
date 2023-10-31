@@ -776,10 +776,44 @@ class RandomShadow(ImageOnlyTransform):
         self.num_shadows_upper = num_shadows_upper
 
         self.shadow_dimension = shadow_dimension
+    def apply_shadow_to_four_channel_image(self,four_channel_image,vertices_list):
+        #When dealing with more channels than 3 we apply the same shadow to the 4th (Nir) channel as we do to RGB. Any other channels are asumed to not be affected by shadows (e.g lidar values) and are kept intakt.
+        #RGB treated like before
+        shadowed_rgb= F.add_shadow(four_channel_image[:,:,0:3], vertices_list)
+
+        #Nir combined with G and B channel to mimic a normal RGB image
+        shadowed_GBnir = F.add_shadow(four_channel_image[:,:,1:4], vertices_list)
+        #Nir is extracted after transformation
+        shadowed_nir = shadowed_GBnir[:,:,2]
+
+        #RGB and nir values are updated to the transformed versions
+        four_channel_image[:,:,0:3] = shadowed_rgb
+        four_channel_image[:,:,3]=shadowed_nir
+        return four_channel_image
 
     def apply(self, image, vertices_list=(), **params):
+        if image.shape[-1]>7:
+            #if we have 8 channels or more, the first 4 cahnnels are from one image, and the next 4 channels are from another image
+            split = random.randint(0,len(vertices_list))
+            vertices_list_1 = vertices_list[0:split]
+            vertices_list_2 = vertices_list[split:]
 
-        return F.add_shadow(image, vertices_list)
+        if image.shape[-1]>3:
+            if image.shape[-1]>7:
+                image[:,:,0:4] = self.apply_shadow_to_four_channel_image(image[:,:,0:4],vertices_list=vertices_list_1)
+                #if we have two rgbnir images ontop of each other we should aply shadows to each image
+                #each image should use differetn shadows as they are taken at different points in time
+                image[:,:,5:9] = self.apply_shadow_to_four_channel_image(image[:,:,5:9],vertices_list=vertices_list_2)
+            else:
+                #if the multichannel image contains less than 8 channels, we should aply all vertices to the only 4channel image there is
+                image[:,:,0:4] = self.apply_shadow_to_four_channel_image(image[:,:,0:4],vertices_list=vertices_list)
+
+            return image
+
+        else:
+            #if there not are more channels than 3 we can apply the shadow like in the original albumentation implementation
+            return F.add_shadow(image, vertices_list)
+
 
     @property
     def targets_as_params(self):
@@ -1280,6 +1314,7 @@ class ISONoise(ImageOnlyTransform):
         return ("intensity", "color_shift")
 
 
+
 class CLAHE(ImageOnlyTransform):
     """Apply Contrast Limited Adaptive Histogram Equalization to the input image.
 
@@ -1769,6 +1804,47 @@ class MultiplicativeNoise(ImageOnlyTransform):
 
     def get_transform_init_args_names(self):
         return "multiplier", "per_channel", "elementwise"
+
+
+class ChannelValueAugmentation(ImageOnlyTransform):
+    """Augment multichannel image by adding a random number to each channel and multiply each channel with a random number
+
+
+    Args:
+        multiplicative_ranges: [(min_channel_0,max_channel_0),(min_channel_1,max_channel_1)...(min_channel_n,max_channel_n)]
+        addition_ranges: [(min_channel_0,max_channel_0),(min_channel_1,max_channel_1)...(min_channel_n,max_channel_n)]
+
+
+    Targets:
+        image
+
+    Image types:
+        multi-channel uint8 images only
+
+    Credit:
+
+    """
+
+    def __init__(self, multiplicative_ranges,addition_ranges, always_apply=False, p=0.5):
+        super(ChannelValueAugmentation, self).__init__(always_apply=always_apply, p=p)
+        self.multiplicative_ranges = multiplicative_ranges
+        self.addition_ranges = addition_ranges
+
+    def apply(self, img, **params):
+        values_to_ad = np.array([random.random(min,max) for (min,max) in self.addition_ranges])
+        values_to_multiply = np.array([random.random(min,max) for (min,max) in self.multiplicative_ranges])
+        img= F.add_channel_value_augmentation(img, values_to_multiply,values_to_ad)
+        return img
+
+    def get_params(self):
+        return {"alpha": random.gauss(0, self.alpha)}
+
+    def get_transform_init_args_names(self):
+        return ("alpha",)
+
+
+
+
 
 
 class FancyPCA(ImageOnlyTransform):

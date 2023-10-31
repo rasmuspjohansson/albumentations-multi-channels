@@ -793,13 +793,18 @@ class RandomShadow(ImageOnlyTransform):
 
     def apply(self, image, vertices_list=(), **params):
         if image.shape[-1]>7:
+            print("image.shape[-1]>7")
             #if we have 8 channels or more, the first 4 cahnnels are from one image, and the next 4 channels are from another image
             split = random.randint(0,len(vertices_list))
             vertices_list_1 = vertices_list[0:split]
             vertices_list_2 = vertices_list[split:]
+            print("vertices_list_1:"+str(vertices_list_1))
+            print("vertices_list_2:"+str(vertices_list_2))
 
         if image.shape[-1]>3:
+            print("image.shape[-1]>3")
             if image.shape[-1]>7:
+                print("image.shape[-1]>7")
                 image[:,:,0:4] = self.apply_shadow_to_four_channel_image(image[:,:,0:4],vertices_list=vertices_list_1)
                 #if we have two rgbnir images ontop of each other we should aply shadows to each image
                 #each image should use differetn shadows as they are taken at different points in time

@@ -1842,10 +1842,12 @@ class ChannelValueAugmentation(ImageOnlyTransform):
         return img
 
     def get_params(self):
-        return {"alpha": random.gauss(0, self.alpha)}
+        return {"multiplicative_ranges": self.multiplicative_ranges,
+                "addition_ranges": self.addition_ranges
+                }
 
     def get_transform_init_args_names(self):
-        return ("alpha",)
+        return ("multiplicative_ranges","addition_ranges")
 
 
 

@@ -738,7 +738,7 @@ def add_channel_value_augmentation(img,values_to_multiply,values_to_ad):
     print(img)
     print("img after to uint8")
 
-    img = np.array(np.clip(img,0,255),dtupe=np.uint8)
+    img = np.array(np.clip(img,0,255),dtype=np.uint8)
     print(img)
     return img
 

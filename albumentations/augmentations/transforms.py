@@ -803,7 +803,7 @@ class RandomShadow(ImageOnlyTransform):
                 image[:,:,0:4] = self.apply_shadow_to_four_channel_image(image[:,:,0:4],vertices_list=vertices_list_1)
                 #if we have two rgbnir images ontop of each other we should aply shadows to each image
                 #each image should use differetn shadows as they are taken at different points in time
-                image[:,:,5:9] = self.apply_shadow_to_four_channel_image(image[:,:,5:9],vertices_list=vertices_list_2)
+                image[:,:,5:9] = self.apply_shadow_to_four_channel_image(image[:,:,4:8],vertices_list=vertices_list_2)
             else:
                 #if the multichannel image contains less than 8 channels, we should aply all vertices to the only 4channel image there is
                 image[:,:,0:4] = self.apply_shadow_to_four_channel_image(image[:,:,0:4],vertices_list=vertices_list)
